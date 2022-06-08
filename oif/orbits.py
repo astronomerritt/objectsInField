@@ -15,12 +15,19 @@ class Orbits(object):
         # Specify the required columns/values in the self.orbits dataframe.
         # Which columns are required depends on self.orb_format.
         self.dataCols = {}
+#         self.dataCols['COM'] = ['objId', 'q', 'e', 'inc', 'Omega', 'argPeri',
+#                                 'tPeri', 'epoch', 'H', 'g', 'sed_filename']
+#         self.dataCols['KEP'] = ['objId', 'a', 'e', 'inc', 'Omega', 'argPeri',
+#                                 'meanAnomaly', 'epoch', 'H', 'g', 'sed_filename']
+#         self.dataCols['CART'] = ['objId', 'x', 'y', 'z', 'xdot', 'ydot', 'zdot',
+#                                  'epoch', 'H', 'g', 'sed_filename']
+
         self.dataCols['COM'] = ['objId', 'q', 'e', 'inc', 'Omega', 'argPeri',
-                                'tPeri', 'epoch', 'H', 'g', 'sed_filename']
+                                'tPeri', 'epoch']
         self.dataCols['KEP'] = ['objId', 'a', 'e', 'inc', 'Omega', 'argPeri',
-                                'meanAnomaly', 'epoch', 'H', 'g', 'sed_filename']
+                                'meanAnomaly', 'epoch']
         self.dataCols['CART'] = ['objId', 'x', 'y', 'z', 'xdot', 'ydot', 'zdot',
-                                 'epoch', 'H', 'g', 'sed_filename']
+                                 'epoch']
 
     def __len__(self):
         return len(self.orbits)
@@ -80,8 +87,8 @@ class Orbits(object):
             orbits = pd.DataFrame.from_records(orbits)
         elif isinstance(orbits, np.record):
             # This was a single object in a numpy array and we should be a bit fancy.
-            orbits = pd.DataFrame.from_records([orbits], columns=orbits.dtype.names)
-
+            orbits = pd.DataFrame.from_records([orbits], columns=orbits.dtype.names) 
+        
         if 'index' in orbits:
             del orbits['index']
 
@@ -211,6 +218,8 @@ class Orbits(object):
             # Figure out whether the header is in the first line, or if there are rows to skip.
             # We need to do a bit of juggling to do this before pandas reads the whole orbit file though.
             file = open(orbitfile, 'r')
+            
+            # Figure out if there is a header. If there is not we will assume this is a typical DES file.
             for line in file:
                 values = line.split(delim)
                 try:
@@ -243,6 +252,10 @@ class Orbits(object):
                 if linestart == '#' or linestart == '!!' or linestart == '##':
                     names = valuesheader[1:]
                     skiprows += 1
+                else: 
+                    names = valuesheader[0:]
+                    skiprows += 1
+                    
                 # Read the data from disk.
                 if delim is None:
                     orbits = pd.read_table(orbitfile, sep='\s+', names=names, skiprows=skiprows)
@@ -270,8 +283,8 @@ class Orbits(object):
         altNames = {}
         altNames['objId'] = ['objId', 'objid', '!!ObjID', '!!OID', '!!S3MID', 'OID', 'S3MID'
                              'objid(int)', 'full_name', '#name']
-        altNames['q'] = ['q']
-        altNames['a'] = ['a']
+        altNames['q'] = ['q', 'peri']
+        altNames['a'] = ['a', 'semia']
         altNames['e'] = ['e', 'ecc']
         altNames['inc'] = ['inc', 'i', 'i(deg)', 'incl']
         altNames['Omega'] = ['Omega', 'omega', 'node', 'om', 'node(deg)',
